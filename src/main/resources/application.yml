@@ -1,0 +1,107 @@
+scheme: http
+hostname: localhost
+reverse-proxy-port: 7080
+reverse-proxy-uri: ${scheme}://${hostname}:${reverse-proxy-port}
+authorities-json-path: $.authorities
+bff-port: 7081
+bff-prefix: /bff
+resource-server-port: 7084
+audience: spring
+
+
+server:
+  port: ${bff-port}
+  ssl:
+    enabled: false
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: bff
+          uri: ${scheme}://${hostname}:${resource-server-port}
+          predicates:
+            - Path=/api/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+            - TokenRelay=
+            - SaveSession
+            - StripPrefix=1
+  security:
+    oauth2:
+      client:
+        registration:
+          spring:
+            client-id: "spring"
+            client-secret: "testing"
+            client-name: "Spring Security"
+            provider: "spring"
+            scope: "openid, profile, offline_access"
+            redirect-uri: ${reverse-proxy-uri}/login/oauth2/code/{registrationId}
+            authorization-grant-type: "authorization_code"
+        provider:
+          spring:
+            issuer-uri: http://localhost:9090
+
+com:
+  c4-soft:
+    springaddons:
+      oidc:
+        ops:
+          - iss: http://localhost:9090
+            authorities:
+              - path: ${authorities-json-path}
+            aud: ${audience}
+        # SecurityFilterChain with oauth2Login() (sessions and CSRF protection enabled)
+        client:
+          client-uri: ${reverse-proxy-uri}${bff-prefix}
+          security-matchers:
+            - /api/**
+            - /login/**
+            - /oauth2/**
+            - /logout/**
+          permit-all:
+            - /api/**
+            - /login/**
+            - /oauth2/**
+            - /logout/connect/back-channel/spring
+          post-logout-redirect-host: ${hostname}
+          csrf: cookie-accessible-from-js
+          oauth2-redirections:
+            rp-initiated-logout: ACCEPTED
+          back-channel-logout:
+            enabled: true
+            internal-logout-uri: ${scheme}://localhost:${bff-port}/logout
+        # SecurityFilterChain with oauth2ResourceServer() (sessions and CSRF protection disabled)
+        resourceserver:
+          permit-all:
+            - /login-options
+            - /error
+            - /v3/api-docs/**
+            - /swagger-ui/**
+            - /actuator/health/readiness
+            - /actuator/health/liveness
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+logging:
+  level:
+    root: TRACE
+    org:
+      springframework:
+        boot: INFO
+        security: TRACE
+        web: INFO
