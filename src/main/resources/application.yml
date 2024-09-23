@@ -27,6 +27,20 @@ spring:
             - TokenRelay=
             - SaveSession
             - StripPrefix=1
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - ${scheme}://${hostname}:4200
+              - ${scheme}://${hostname}:7080
+              - http://smed:7080
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "*"
+            allowCredentials: true
   security:
     oauth2:
       client:
@@ -41,14 +55,14 @@ spring:
             authorization-grant-type: "authorization_code"
         provider:
           spring:
-            issuer-uri: http://localhost:9090
+            issuer-uri: ${scheme}://${hostname}:9090
 
 com:
   c4-soft:
     springaddons:
       oidc:
         ops:
-          - iss: http://localhost:9090
+          - iss: ${scheme}://${hostname}:9090
             authorities:
               - path: ${authorities-json-path}
             aud: ${audience}
@@ -71,7 +85,7 @@ com:
             rp-initiated-logout: ACCEPTED
           back-channel-logout:
             enabled: true
-            internal-logout-uri: ${scheme}://localhost:${bff-port}/logout
+            internal-logout-uri: ${scheme}://${hostname}:${bff-port}/logout
         # SecurityFilterChain with oauth2ResourceServer() (sessions and CSRF protection disabled)
         resourceserver:
           permit-all:
