@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,7 +44,7 @@ public class ProxyController {
     }
 
     @GetMapping(path = "/login-options", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<List<LoginOptionDto>> getLoginOptions() throws URISyntaxException {
+    public Mono<List<LoginOptionDto>> getLoginOptions() {
         return Mono.just(this.loginOptions);
     }
 
