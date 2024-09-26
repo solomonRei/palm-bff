@@ -27,6 +27,19 @@ spring:
             - TokenRelay=
             - SaveSession
             - StripPrefix=1
+        - id: auth-server
+          uri: ${scheme}://${hostname}:9090
+          predicates:
+            - Path=/auth/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+            - TokenRelay=
+            - SaveSession
+            - AddRequestHeader=Accept, application/json
+            - StripPrefix=1
+            - name: ResponseCustomFilterFactory
+              args:
+                param1: "123jfk89"
       globalcors:
         cors-configurations:
           '[/**]':
