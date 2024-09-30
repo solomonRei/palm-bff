@@ -42,9 +42,17 @@ public class ResponseCustomFilterFactory extends AbstractGatewayFilterFactory<Re
         modifyResponseBodyFilterFactoryConfig.setNewContentType(MediaType.APPLICATION_JSON_VALUE);
         modifyResponseBodyFilterFactoryConfig.setRewriteFunction(Map.class, Map.class, (exchange, bodyAsMap) -> {
             try {
+                if (bodyAsMap == null) {
+                    log.info("Response body is null");
+                    return Mono.empty();
+                }
+
                 Map<String, Object> responseBody = (Map<String, Object>) bodyAsMap;
                 log.info("Response body: {}", responseBody);
 
+                if (responseBody == null) {
+                    return Mono.empty();
+                }
 
                 return Mono.just(responseBody);
             } catch (Exception e) {
